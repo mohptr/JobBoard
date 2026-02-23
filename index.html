@@ -13,7 +13,7 @@
             position: relative;
             width: 100%;
             max-width: 600px;
-            height: 250px; /* Slightly shorter for a 2x2 grid */
+            height: 250px;
             margin: 0 auto;
         }
         @media (min-width: 768px) {
@@ -25,19 +25,15 @@
 </head>
 <body class="antialiased min-h-screen flex flex-col">
 
-    <!-- Sandbox Warning Banner -->
-    <div id="sandbox-warning" class="hidden bg-amber-100 border-b border-amber-200 text-amber-800 px-4 py-2 text-sm text-center font-medium">
-        ⚠️ Note: You are viewing this in a temporary preview window. To enable saving tracked jobs across page refreshes, download this HTML file and open it directly in your browser.
+    <!-- Connection Status Banner -->
+    <div id="connection-status" class="bg-amber-100 border-b border-amber-200 text-amber-800 px-4 py-2 text-sm text-center font-medium transition-colors duration-300">
+        <span class="animate-pulse">🔄 Connecting to live data source...</span>
     </div>
 
-    <!-- Chosen Palette: Slate (Professional/Neutral) with Emerald (Success), Amber (Warning), and Rose (Danger) for semantic status. Background is a warm off-white (Slate-50). -->
-
-    <!-- Application Structure Plan: 
-         1. Hero Section: Immediate high-level summary metrics.
-         2. Market Analytics Dashboard (2x2 Grid): Visualizations (Chart.js) acting as interactive global filters.
-         3. Interactive Job Explorer: The core list of 90 jobs with dropdown filters, pagination/counts, and inline action buttons.
-         4. Tracked Applications: A local-storage backed list of saved jobs to provide workflow continuity across sessions.
-    -->
+    <!-- Sandbox Warning Banner -->
+    <div id="sandbox-warning" class="hidden bg-slate-800 text-white px-4 py-2 text-xs text-center font-medium">
+        ⚠️ Note: Viewing in a preview window. To save tracked jobs across sessions, download this HTML file.
+    </div>
 
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -59,333 +55,245 @@
     </header>
 
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 w-full">
-
-        <!-- Section 1: Market Analytics Dashboard -->
-        <section id="analytics" class="space-y-6">
-            <div class="space-y-2">
-                <h2 class="text-2xl font-bold text-slate-900">Market Landscape Overview</h2>
-                <p class="text-slate-600 max-w-3xl leading-relaxed">
-                    This dashboard synthesizes 90 active opportunities (posted within the last 14 days) against your profile. 
-                    <strong>Click on any chart segment (bars or pie slices) to instantly filter the job list below.</strong>
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Chart 1: Feasibility Distribution -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
-                    <h3 class="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-2">Feasibility Score Distribution</h3>
-                    <div class="flex-grow flex items-center justify-center w-full">
-                        <div class="chart-container cursor-pointer">
-                            <canvas id="scoreChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chart 2: Verdict Breakdown -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
-                    <h3 class="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-2">Recruiter Verdict Categories</h3>
-                    <div class="flex-grow flex items-center justify-center w-full">
-                        <div class="chart-container cursor-pointer">
-                            <canvas id="verdictChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chart 3: Company Profile -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
-                    <h3 class="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-2">Fortune 500 vs. Market</h3>
-                    <div class="flex-grow flex items-center justify-center w-full">
-                        <div class="chart-container cursor-pointer">
-                            <canvas id="fortuneChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chart 4: Posting Age -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
-                    <h3 class="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-2">Job Posting Recency</h3>
-                    <div class="flex-grow flex items-center justify-center w-full">
-                        <div class="chart-container cursor-pointer">
-                            <canvas id="postedChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Visualization & Content Choices:
-             - Interactive Dashboard: Replaced static text with a 2x2 grid of Chart.js elements.
-             - Goal: Allow the user to "slice and dice" the 90 jobs visually.
-             - Interaction: chart.js `onClick` events capture the clicked label and update a global `chartFilters` state object, triggering a re-render of the table.
-        -->
-
-        <!-- Section 2: Interactive Job Explorer -->
-        <section id="explorer" class="scroll-mt-24">
-            <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6">
+        <!-- Main Content Area (Hidden until data loads) -->
+        <div id="dashboard-content" class="opacity-0 transition-opacity duration-500 space-y-12">
+            
+            <!-- Section 1: Market Analytics Dashboard -->
+            <section id="analytics" class="space-y-6">
                 <div class="space-y-2">
-                    <h2 class="text-2xl font-bold text-slate-900">Opportunity Explorer</h2>
+                    <h2 class="text-2xl font-bold text-slate-900">Market Landscape Overview</h2>
+                    <p class="text-slate-600 max-w-3xl leading-relaxed">
+                        This dynamic dashboard synthesizes live opportunities fetched from your repository. 
+                        <strong>Click on any chart segment (bars or pie slices) to instantly filter the job list below.</strong>
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
+                        <h3 class="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-2">Feasibility Score Distribution</h3>
+                        <div class="flex-grow flex items-center justify-center w-full">
+                            <div class="chart-container cursor-pointer"><canvas id="scoreChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
+                        <h3 class="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-2">Recruiter Verdict Categories</h3>
+                        <div class="flex-grow flex items-center justify-center w-full">
+                            <div class="chart-container cursor-pointer"><canvas id="verdictChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
+                        <h3 class="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-2">Fortune 500 vs. Market</h3>
+                        <div class="flex-grow flex items-center justify-center w-full">
+                            <div class="chart-container cursor-pointer"><canvas id="fortuneChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
+                        <h3 class="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-2">Job Posting Recency</h3>
+                        <div class="flex-grow flex items-center justify-center w-full">
+                            <div class="chart-container cursor-pointer"><canvas id="postedChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Interactive Job Explorer -->
+            <section id="explorer" class="scroll-mt-24">
+                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6">
+                    <div class="space-y-2">
+                        <h2 class="text-2xl font-bold text-slate-900">Opportunity Explorer</h2>
+                        <p class="text-slate-600 max-w-2xl text-sm">
+                            Check the box on the right to save a job to your local tracking list.
+                        </p>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-3 items-center bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="relative">
+                            <select id="filter-verdict" class="appearance-none bg-slate-50 border border-slate-300 text-slate-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium">
+                                <option value="all">All Verdicts</option>
+                                <option value="yes">🟢 High Fit (Yes)</option>
+                                <option value="maybe">🟠 Moderate Fit (Maybe)</option>
+                                <option value="no">🔴 Low Fit (No)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500"><svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
+                        </div>
+
+                        <div class="relative">
+                            <select id="filter-f500" class="appearance-none bg-slate-50 border border-slate-300 text-slate-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium">
+                                <option value="all">All Companies</option>
+                                <option value="yes">Fortune 500 Only</option>
+                                <option value="no">Non-Fortune 500</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500"><svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
+                        </div>
+
+                        <button id="reset-filters" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-sm transition-colors border border-slate-300">
+                            Reset All Filters
+                        </button>
+                        
+                        <div id="active-chart-filters" class="text-xs text-indigo-700 font-semibold ml-2 px-3 py-1.5 bg-indigo-50 rounded-lg border border-indigo-200 hidden items-center gap-2">
+                            <span>Active Chart Filters: <span id="filter-list-text" class="font-normal"></span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">#</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Score</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Posted</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Verdict</th>
+                                    <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Link</th>
+                                    <th scope="col" class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider bg-emerald-50 text-emerald-800">Applied</th>
+                                </tr>
+                            </thead>
+                            <tbody id="job-table-body" class="bg-white divide-y divide-slate-100">
+                                <!-- Rows injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-between">
+                        <span class="text-sm text-slate-600">Showing <span id="showing-count" class="font-bold text-slate-900 bg-white px-2 py-1 rounded border border-slate-200">0</span> roles matching criteria</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Tracked Applications -->
+            <section id="applied-section" class="scroll-mt-24 hidden">
+                <div class="space-y-2 mb-6 border-t-2 border-dashed border-slate-200 pt-10">
+                    <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                        <svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Your Tracked Applications
+                    </h2>
                     <p class="text-slate-600 max-w-2xl text-sm">
-                        Check the box on the right to save a job to your local tracking list.
+                        Roles you have marked are saved securely in your browser's local storage. This list will persist even if you refresh or close the page.
                     </p>
                 </div>
                 
-                <!-- Filters -->
-                <div class="flex flex-wrap gap-3 items-center bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="relative">
-                        <select id="filter-verdict" class="appearance-none bg-slate-50 border border-slate-300 text-slate-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium">
-                            <option value="all">All Verdicts</option>
-                            <option value="yes">🟢 High Fit (Yes)</option>
-                            <option value="maybe">🟠 Moderate Fit (Maybe)</option>
-                            <option value="no">🔴 Low Fit (No)</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                        </div>
-                    </div>
-
-                    <div class="relative">
-                        <select id="filter-f500" class="appearance-none bg-slate-50 border border-slate-300 text-slate-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium">
-                            <option value="all">All Companies</option>
-                            <option value="yes">Fortune 500 Only</option>
-                            <option value="no">Non-Fortune 500</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                        </div>
-                    </div>
-
-                    <button id="reset-filters" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-sm transition-colors border border-slate-300">
-                        Reset All Filters
-                    </button>
-                    
-                    <div id="active-chart-filters" class="text-xs text-indigo-700 font-semibold ml-2 px-3 py-1.5 bg-indigo-50 rounded-lg border border-indigo-200 hidden items-center gap-2">
-                        <span>Active Chart Filters: <span id="filter-list-text" class="font-normal"></span></span>
+                <div class="bg-white rounded-xl shadow-sm border-2 border-emerald-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-emerald-100">
+                            <thead class="bg-emerald-50/50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Company</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Role</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider w-24">Score</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider w-32">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="applied-table-body" class="bg-white divide-y divide-emerald-50">
+                                <!-- Rows injected by JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-
-            <!-- Job List Container -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">#</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Score</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Posted</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Verdict</th>
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Link</th>
-                                <th scope="col" class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider bg-emerald-50 text-emerald-800">Applied</th>
-                            </tr>
-                        </thead>
-                        <tbody id="job-table-body" class="bg-white divide-y divide-slate-100">
-                            <!-- Rows injected by JS -->
-                        </tbody>
-                    </table>
-                </div>
-                <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-between">
-                    <span class="text-sm text-slate-600">Showing <span id="showing-count" class="font-bold text-slate-900 bg-white px-2 py-1 rounded border border-slate-200">0</span> roles matching criteria</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 3: Tracked Applications -->
-        <section id="applied-section" class="scroll-mt-24 hidden">
-            <div class="space-y-2 mb-6 border-t-2 border-dashed border-slate-200 pt-10">
-                <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                    <svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Your Tracked Applications
-                </h2>
-                <p class="text-slate-600 max-w-2xl text-sm">
-                    Roles you have marked are saved securely in your browser's local storage. This list will persist even if you refresh or close the page.
-                </p>
-            </div>
-            
-            <div class="bg-white rounded-xl shadow-sm border-2 border-emerald-100 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-emerald-100">
-                        <thead class="bg-emerald-50/50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Company</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Role</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider w-24">Score</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider w-32">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="applied-table-body" class="bg-white divide-y divide-emerald-50">
-                            <!-- Rows injected by JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
+            </section>
+        </div>
     </main>
 
     <footer class="bg-slate-900 text-slate-400 py-8 mt-12 border-t border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm flex flex-col items-center justify-center gap-2">
             <p>&copy; 2026 Executive Recruiter AI Agent. Generated for Abhisek Mohapatra.</p>
-            <p class="text-slate-500">Data derived from active Singapore market scan.</p>
+            <p class="text-slate-500">Data fetched dynamically from configured repository.</p>
         </div>
     </footer>
 
-    <!-- CONFIRMATION: NO SVG graphics used (except minimal Tailwind UI utility paths). NO Mermaid JS used. -->
-
     <script>
-        // Display warning if running in an iframe/preview sandbox
+        // =====================================================================
+        // CONFIGURATION
+        // =====================================================================
+        const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/mohptr/JobBoard/refs/heads/main/jobs.json';
+        
+        // =====================================================================
+        // STATE & INITIALIZATION
+        // =====================================================================
+        let jobData = [];
+        let chartInstances = {}; 
+        let chartFilters = { score: null, verdict: null, f500: null, posted: null };
+        let appliedJobs = JSON.parse(localStorage.getItem('abhisek_applied_jobs_v4')) || [];
+
+        // Display sandbox warning if needed
         if (window.self !== window.top || window.location.protocol === 'data:') {
             document.getElementById('sandbox-warning').classList.remove('hidden');
         }
 
-        // Data Storage: 90 Jobs (50 >= 8.0, 40 < 8.0). All posted <= 2 weeks ago.
-        const jobData = [
-            // TOP 50 (Scores 8.0 - 9.8) - High Fit
-            { title: "Principal Product Manager (Financials/Insurance)", company: "SAP", f500: true, score: 9.8, posted: "2 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior Product Manager, Digital Insurance", company: "Chubb", f500: true, score: 9.7, posted: "1 week ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "APAC Lead Product Manager (Life & Health)", company: "MetLife", f500: true, score: 9.6, posted: "3 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "VP Product, Digital Ecosystems", company: "FWD Insurance", f500: false, score: 9.6, posted: "2 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "VP, Product Strategy (AI & Data)", company: "Mastercard", f500: true, score: 9.5, posted: "5 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Head of Digital Platforms (InsurTech)", company: "Prudential", f500: true, score: 9.5, posted: "2 weeks ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior PM, AI Innovation", company: "Manulife", f500: true, score: 9.5, posted: "1 week ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "DVP, Product Development (Health & Protection)", company: "Income Insurance", f500: false, score: 9.4, posted: "4 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Product Lead, Core Systems", company: "Great Eastern", f500: false, score: 9.4, posted: "5 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "AVP/VP, Digital Product Manager", company: "DBS Bank", f500: false, score: 9.3, posted: "1 day ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Group PM, HealthTech", company: "Singlife", f500: false, score: 9.3, posted: "3 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior PM, AI & Digital Transformation", company: "UOB", f500: false, score: 9.2, posted: "6 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Director, Product Strategy (FinTech)", company: "Standard Chartered", f500: false, score: 9.2, posted: "1 week ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "VP, Product Management", company: "Goldman Sachs", f500: true, score: 9.2, posted: "1 day ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Principal PM Manager (Copilot/AI)", company: "Microsoft", f500: true, score: 9.1, posted: "2 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Lead PM, AI/ML Platform", company: "JPMorgan Chase", f500: true, score: 9.1, posted: "4 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior PM, Financial Services Cloud", company: "Amazon (AWS)", f500: true, score: 9.0, posted: "3 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Lead Product Manager (Payments)", company: "Stripe", f500: false, score: 9.0, posted: "12 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior Product Expert", company: "Ant Group", f500: false, score: 9.0, posted: "1 week ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior Product Manager, APAC", company: "Adyen", f500: false, score: 8.9, posted: "4 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Product Head, APAC Expansion", company: "Revolut", f500: false, score: 8.9, posted: "2 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior PM, Regional Payments", company: "Wise", f500: false, score: 8.9, posted: "12 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Director, Product Management (B2B Payments)", company: "Visa", f500: true, score: 8.8, posted: "5 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior Product Manager (FinTech/Payments)", company: "Grab", f500: false, score: 8.8, posted: "1 day ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Director of Product, API", company: "Nium", f500: false, score: 8.8, posted: "5 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior Outbound PM, Generative AI", company: "Google", f500: true, score: 8.7, posted: "7 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Staff Product Manager, Embedded Finance", company: "Airwallex", f500: false, score: 8.7, posted: "5 hours ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "VP, Product Strategy", company: "Endowus", f500: false, score: 8.7, posted: "3 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Group Product Manager", company: "StashAway", f500: false, score: 8.7, posted: "1 day ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Product Manager, Digital Wallets", company: "PayPal", f500: true, score: 8.6, posted: "1 week ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "APAC Product Partnerships Manager", company: "OpenAI", f500: false, score: 8.6, posted: "1 day ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Digital Product Owner", company: "AIA", f500: false, score: 8.6, posted: "6 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior PM, Digital Transformation", company: "Allianz", f500: true, score: 8.6, posted: "1 week ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "AI/ML Product Manager, FinTech Services", company: "Apple", f500: true, score: 8.5, posted: "2 weeks ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "AI Strategy Business Product Manager", company: "Shopee", f500: false, score: 8.5, posted: "1 day ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Lead PM, FinTech Services", company: "Gojek", f500: false, score: 8.5, posted: "4 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior PM, FinTech", company: "Foodpanda", f500: false, score: 8.5, posted: "2 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "VP, Product Management (Digital Assets)", company: "BNY Mellon", f500: true, score: 8.4, posted: "3 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior Product Manager (B2B SaaS FinTech)", company: "Stampli", f500: false, score: 8.4, posted: "10 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior Product Manager (Platform.AI)", company: "GovTech Singapore", f500: false, score: 8.4, posted: "2 weeks ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Principal PM, Accounting AI", company: "Xero", f500: false, score: 8.4, posted: "1 week ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Principal Product Manager", company: "Sea Limited", f500: false, score: 8.3, posted: "2 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "VP, Cross Border Payments Product Manager", company: "Citi", f500: true, score: 8.3, posted: "3 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "AI Product Strategist", company: "IBM", f500: true, score: 8.3, posted: "10 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "AI Product Manager (Evaluation)", company: "ByteDance", f500: false, score: 8.2, posted: "1 week ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior VP, Group Product Management", company: "OCBC Bank", f500: false, score: 8.2, posted: "5 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Advisory PM, Financial Workflows", company: "ServiceNow", f500: false, score: 8.2, posted: "2 weeks ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "AI Product Manager", company: "Singtel", f500: false, score: 8.1, posted: "1 day ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Data Product Manager", company: "Snowflake", f500: false, score: 8.1, posted: "1 day ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
-            { title: "Senior Group Product Manager", company: "NTUC Fairprice", f500: false, score: 8.0, posted: "2 weeks ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
+        // =====================================================================
+        // DATA FETCHING LOGIC
+        // =====================================================================
+        async function loadJobData() {
+            const statusBanner = document.getElementById('connection-status');
+            
+            try {
+                if (!GITHUB_JSON_URL || GITHUB_JSON_URL.includes('YOUR_RAW_GITHUB_JSON_URL_HERE')) {
+                    throw new Error("URL not configured");
+                }
+                
+                // Added a cache-busting query parameter so it always fetches fresh data
+                const response = await fetch(`${GITHUB_JSON_URL}?t=${new Date().getTime()}`, { cache: "no-store" });
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                jobData = await response.json();
+                
+                // Success UI Update
+                statusBanner.className = "bg-emerald-100 border-b border-emerald-200 text-emerald-800 px-4 py-2 text-sm text-center font-medium transition-colors duration-300";
+                statusBanner.innerHTML = "✅ Successfully connected to live Git repository. Data is up to date.";
+                
+                setTimeout(() => { statusBanner.style.display = 'none'; }, 3000);
 
-            // BOTTOM 40 (Scores < 8.0) - Moderate to Low Fit, but ALL posted within 2 weeks
-            { title: "Product Manager - Growth & Monetization", company: "Meta", f500: true, score: 7.9, posted: "11 days ago", link: "#", verdict: "🟠 MAYBE – MINOR TWEAKS RECOMMENDED" },
-            { title: "AI Solution Program Manager", company: "Schneider Electric", f500: true, score: 7.8, posted: "1 week ago", link: "#", verdict: "🟠 MAYBE – MINOR TWEAKS RECOMMENDED" },
-            { title: "PM, E-commerce Logistics", company: "TikTok", f500: false, score: 7.8, posted: "2 days ago", link: "#", verdict: "🟠 MAYBE – MINOR TWEAKS RECOMMENDED" },
-            { title: "Product Manager, Card Operations", company: "Binance", f500: false, score: 7.7, posted: "3 days ago", link: "#", verdict: "🟠 MAYBE – MINOR TWEAKS RECOMMENDED" },
-            { title: "Senior Product Manager, Sports & Trading", company: "Crypto.com", f500: false, score: 7.6, posted: "5 days ago", link: "#", verdict: "🟠 MAYBE – MINOR TWEAKS RECOMMENDED" },
-            { title: "Product Owner (Engagement Lead)", company: "Capgemini", f500: false, score: 7.5, posted: "2 days ago", link: "#", verdict: "🟠 MAYBE – MINOR TWEAKS RECOMMENDED" },
-            { title: "Product Manager, Energy Products", company: "Tesla", f500: true, score: 7.5, posted: "1 week ago", link: "#", verdict: "🟠 MAYBE – MINOR TWEAKS RECOMMENDED" },
-            { title: "Product Manager (Product + Growth)", company: "Sleek", f500: false, score: 7.4, posted: "1 day ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "Data Product Manager, Analytics", company: "FedEx", f500: true, score: 7.3, posted: "11 days ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "Product Manager Business Technology", company: "DHL Express", f500: true, score: 7.2, posted: "23 hours ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "AVP, HR Tech Product", company: "GIC", f500: false, score: 7.1, posted: "3 days ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "Manager, Software Applications PM", company: "LHN Group", f500: false, score: 7.0, posted: "2 weeks ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "Product Manager, Internal Tools", company: "Temasek", f500: false, score: 6.9, posted: "5 days ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "Senior Manager, Product Development", company: "Razer", f500: false, score: 6.8, posted: "4 days ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "Product Manager - Compliance (SG)", company: "Coins.ph", f500: false, score: 6.5, posted: "1 week ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "VP of Product Management", company: "Cermati.com", f500: false, score: 6.4, posted: "2 weeks ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "PM, Enterprise Storage", company: "Seagate", f500: true, score: 6.3, posted: "12 days ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "Product Manager - Cybersecurity", company: "Pixalate", f500: false, score: 6.2, posted: "3 days ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "Senior Assistant Product Manager", company: "AnyMind Group", f500: false, score: 6.0, posted: "1 week ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
-            { title: "Product Marketing Manager", company: "Micron", f500: true, score: 5.9, posted: "2 weeks ago", link: "#", verdict: "🟥 NO – SEVERE SPECIALIZED DOMAIN GAP" },
-            { title: "Product Marketing Manager", company: "Supabase", f500: false, score: 5.8, posted: "2 weeks ago", link: "#", verdict: "🟥 NO – SEVERE SPECIALIZED DOMAIN GAP" },
-            { title: "Senior Game Product Manager (TFT)", company: "Riot Games", f500: false, score: 5.5, posted: "2 days ago", link: "#", verdict: "🟥 NO – SEVERE SPECIALIZED DOMAIN GAP" },
-            { title: "Game PM, Live Ops", company: "Ubisoft", f500: false, score: 5.4, posted: "1 day ago", link: "#", verdict: "🟥 NO – SEVERE SPECIALIZED DOMAIN GAP" },
-            { title: "Staff Product Manager, GeoExpansion", company: "Entrust", f500: false, score: 5.2, posted: "2 days ago", link: "#", verdict: "🟥 NO – SEVERE SPECIALIZED DOMAIN GAP" },
-            { title: "Product Manager", company: "Netpoleon Solutions", f500: false, score: 5.0, posted: "4 days ago", link: "#", verdict: "🟥 NO – SEVERE SPECIALIZED DOMAIN GAP" },
-            { title: "PM, Supply Chain", company: "Agoda", f500: false, score: 4.9, posted: "6 days ago", link: "#", verdict: "🟥 NO – SEVERE SPECIALIZED DOMAIN GAP" },
-            { title: "Product Manager (3D GenAI)", company: "Bifrost", f500: false, score: 4.8, posted: "10 days ago", link: "#", verdict: "🟥 NO – SEVERE SPECIALIZED DOMAIN GAP" },
-            { title: "Demand Management PM", company: "Applied Materials", f500: true, score: 4.5, posted: "2 days ago", link: "#", verdict: "🟥 NO – SEVERE SPECIALIZED DOMAIN GAP" },
-            { title: "PM, Consumer Electronics", company: "Dyson", f500: false, score: 4.3, posted: "1 week ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "AI Product Manager (B2B FinTech)", company: "ATTIX APAC", f500: false, score: 4.2, posted: "1 week ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "PM, In-flight Entertainment", company: "SIA", f500: false, score: 3.9, posted: "4 days ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "Product Engineer/Manager", company: "Akribis Systems", f500: false, score: 3.8, posted: "2 weeks ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "Product Merchandising Manager", company: "Sunnystep", f500: false, score: 3.5, posted: "1 week ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "City Manager (Ride-Hailing)", company: "TADA Mobility", f500: false, score: 3.0, posted: "1 week ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "Growth Marketer / PM", company: "Evie.ai", f500: false, score: 2.8, posted: "5 days ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "Senior Sales & Product Manager", company: "Jampp", f500: false, score: 2.5, posted: "2 weeks ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "Business Development Manager", company: "Beyond Border", f500: false, score: 2.2, posted: "3 days ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "Remote Sales Executive / PM", company: "Avi-Go", f500: false, score: 2.0, posted: "4 days ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "Product Manager (Online Education)", company: "Bamboo System", f500: false, score: 1.8, posted: "2 weeks ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" },
-            { title: "Product Manager Intern", company: "Skyclad Ventures", f500: false, score: 1.5, posted: "1 week ago", link: "#", verdict: "🟥 NO – GENERAL WEAKNESS" }
-        ];
+            } catch (error) {
+                console.warn("Could not fetch from Git repo. Falling back to offline sample data.", error);
+                
+                statusBanner.className = "bg-rose-100 border-b border-rose-200 text-rose-800 px-4 py-2 text-sm text-center font-medium transition-colors duration-300";
+                statusBanner.innerHTML = "⚠️ Cannot reach Git Repo. Viewing Offline Sample Data.";
+                
+                jobData = getFallbackData();
+            }
 
-        // State for interactive chart filters
-        let chartFilters = {
-            score: null,
-            verdict: null,
-            f500: null,
-            posted: null
-        };
+            // Reveal Dashboard and Initialize
+            document.getElementById('dashboard-content').classList.remove('opacity-0');
+            
+            document.getElementById('hero-total-count').textContent = jobData.length;
+            document.getElementById('hero-high-count').textContent = jobData.filter(j => j.score >= 8.0).length;
 
-        // Application Tracking State (LocalStorage)
-        let appliedJobs = JSON.parse(localStorage.getItem('abhisek_applied_jobs_v2')) || [];
-
-        // Helper: Generate unique ID for a job
-        function getJobId(job) {
-            return `${job.company}:::${job.title}`;
+            initCharts();
+            renderTable();
+            renderAppliedJobs();
         }
 
-        // Toggle Application Status
+        // =====================================================================
+        // TABLE & FILTER RENDERING
+        // =====================================================================
+        function getJobId(job) { return `${job.company}:::${job.title}`; }
+
         window.toggleAppliedStatus = function(jobId) {
             if (appliedJobs.includes(jobId)) {
                 appliedJobs = appliedJobs.filter(id => id !== jobId);
             } else {
                 appliedJobs.push(jobId);
             }
-            localStorage.setItem('abhisek_applied_jobs_v2', JSON.stringify(appliedJobs));
+            localStorage.setItem('abhisek_applied_jobs_v4', JSON.stringify(appliedJobs));
             renderAppliedJobs();
-            renderTable(); // Re-render main table to update checkbox visual state
+            renderTable(); 
         };
 
-        // Helper: Convert posted string to buckets
         function getAgeBucket(postedStr) {
+            if(!postedStr) return '> 7 Days';
             const p = postedStr.toLowerCase();
             if (p.includes('hour') || p.includes('just') || p.includes('1 day') || p.includes('2 day') || p.includes('3 day')) return '≤ 3 Days';
             if (p.includes('4 day') || p.includes('5 day') || p.includes('6 day') || p.includes('1 week') || p.includes('7 day')) return '4-7 Days';
             return '> 7 Days'; 
         }
 
-        // DOM Elements
         const tableBody = document.getElementById('job-table-body');
         const countSpan = document.getElementById('showing-count');
-        const filterVerdict = document.getElementById('filter-verdict');
-        const filterF500 = document.getElementById('filter-f500');
-        const resetBtn = document.getElementById('reset-filters');
         const activeFiltersDisplay = document.getElementById('active-chart-filters');
         const filterListText = document.getElementById('filter-list-text');
         const appliedSection = document.getElementById('applied-section');
         const appliedTableBody = document.getElementById('applied-table-body');
-        
-        // Setup Hero Stats
-        document.getElementById('hero-total-count').textContent = jobData.length;
-        document.getElementById('hero-high-count').textContent = jobData.filter(j => j.score >= 8.0).length;
 
         function updateFilterDisplay() {
             const active = Object.values(chartFilters).filter(v => v !== null);
@@ -400,11 +308,10 @@
         function renderTable() {
             tableBody.innerHTML = '';
             
-            const verdictVal = filterVerdict.value;
-            const f500Val = filterF500.value;
+            const verdictVal = document.getElementById('filter-verdict').value;
+            const f500Val = document.getElementById('filter-f500').value;
 
             const filtered = jobData.filter(job => {
-                // Dropdown filters
                 let vMatch = true;
                 if (verdictVal === 'yes') vMatch = job.verdict.includes('YES');
                 else if (verdictVal === 'maybe') vMatch = job.verdict.includes('MAYBE');
@@ -414,7 +321,6 @@
                 if (f500Val === 'yes') fMatch = job.f500 === true;
                 else if (f500Val === 'no') fMatch = job.f500 === false;
 
-                // Chart Filters
                 let chartSMatch = true;
                 if (chartFilters.score) {
                     if (chartFilters.score === '9-10') chartSMatch = job.score >= 9;
@@ -462,13 +368,11 @@
                 const jobId = getJobId(job);
                 const isApplied = appliedJobs.includes(jobId);
 
-                // Color coding for score
                 let scoreClass = 'text-slate-800 bg-slate-100 border-slate-200';
                 if(job.score >= 8) scoreClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
                 else if(job.score >= 6) scoreClass = 'text-amber-700 bg-amber-50 border-amber-200';
                 else scoreClass = 'text-rose-700 bg-rose-50 border-rose-200';
 
-                // Simplified verdict text
                 let verdictShort = 'Unknown';
                 let verdictColor = 'text-slate-500';
                 if(job.verdict.includes('YES')) { verdictShort = 'High Fit'; verdictColor = 'text-emerald-600 font-semibold'; }
@@ -479,96 +383,64 @@
                 const strikeTitle = isApplied ? 'line-through text-slate-400' : 'text-slate-900';
 
                 tr.innerHTML = `
-                    <td class="px-4 py-4 whitespace-nowrap text-xs font-mono text-slate-400 ${rowOpacity}">
-                        ${serialCounter++}
-                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-xs font-mono text-slate-400 ${rowOpacity}">${serialCounter++}</td>
                     <td class="px-4 py-4 whitespace-nowrap ${rowOpacity}">
-                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold border ${scoreClass}">
-                            ${job.score.toFixed(1)}
-                        </span>
+                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold border ${scoreClass}">${job.score.toFixed(1)}</span>
                     </td>
-                    <td class="px-4 py-4 ${rowOpacity}">
-                        <div class="text-sm font-semibold ${strikeTitle}">${job.title}</div>
-                    </td>
+                    <td class="px-4 py-4 ${rowOpacity}"><div class="text-sm font-semibold ${strikeTitle}">${job.title}</div></td>
                     <td class="px-4 py-4 whitespace-nowrap ${rowOpacity}">
                         <div class="flex items-center">
                             <span class="text-sm ${isApplied ? 'text-slate-400' : 'text-slate-700 font-medium'}">${job.company}</span>
                             ${job.f500 ? '<span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 uppercase tracking-wider">F500</span>' : ''}
                         </div>
                     </td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500 ${rowOpacity}">
-                        ${job.posted}
-                    </td>
-                    <td class="px-4 py-4 text-sm ${verdictColor} ${rowOpacity}">
-                        ${verdictShort}
-                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500 ${rowOpacity}">${job.posted}</td>
+                    <td class="px-4 py-4 text-sm ${verdictColor} ${rowOpacity}">${verdictShort}</td>
                     <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium ${rowOpacity}">
                         <a href="${job.link}" target="_blank" class="text-indigo-600 hover:text-indigo-900 group-hover:underline inline-flex items-center gap-1" onclick="event.stopPropagation();">
-                            Apply
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            Apply <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                         </a>
                     </td>
                     <td class="px-4 py-4 whitespace-nowrap text-center bg-slate-50 border-l border-slate-100">
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" 
-                                   class="sr-only peer" 
-                                   ${isApplied ? 'checked' : ''} 
-                                   onclick="event.stopPropagation(); toggleAppliedStatus('${jobId.replace(/'/g, "\\'")}')">
-                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                        </label>
+                        <input type="checkbox" 
+                               class="w-5 h-5 text-emerald-600 bg-white border-slate-300 rounded focus:ring-emerald-500 focus:ring-2 cursor-pointer transition-colors" 
+                               ${isApplied ? 'checked' : ''} 
+                               onclick="event.stopPropagation(); toggleAppliedStatus('${jobId.replace(/'/g, "\\'")}')">
                     </td>
                 `;
                 
-                // Clicking a row highlights it slightly
                 tr.addEventListener('click', (e) => {
                     if (e.target.tagName !== 'A' && e.target.tagName !== 'INPUT') {
                         document.querySelectorAll('tr').forEach(r => r.classList.remove('bg-indigo-50'));
                         tr.classList.add('bg-indigo-50');
                     }
                 });
-
                 tableBody.appendChild(tr);
             });
         }
 
-        // Render Tracked Applications Table
         function renderAppliedJobs() {
             if (appliedJobs.length === 0) {
                 appliedSection.classList.add('hidden');
                 return;
             }
-            
             appliedSection.classList.remove('hidden');
             appliedTableBody.innerHTML = '';
-
-            // Filter job data to only include those in the appliedJobs array
             const tracked = jobData.filter(job => appliedJobs.includes(getJobId(job)));
 
             tracked.forEach(job => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-emerald-50 transition-colors";
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-bold text-slate-800">${job.company}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-sm font-medium text-slate-700">${job.title}</div>
-                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-bold text-slate-800">${job.company}</div></td>
+                    <td class="px-6 py-4"><div class="text-sm font-medium text-slate-700">${job.title}</div></td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
-                        <span class="inline-flex items-center justify-center px-2 py-1 rounded text-xs font-bold bg-slate-100 text-slate-800">
-                            ${job.score.toFixed(1)}
-                        </span>
+                        <span class="inline-flex items-center justify-center px-2 py-1 rounded text-xs font-bold bg-slate-100 text-slate-800">${job.score.toFixed(1)}</span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
                         <button onclick="toggleAppliedStatus('${getJobId(job).replace(/'/g, "\\'")}')" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-rose-100 hover:text-rose-800 group transition-colors focus:outline-none">
-                            <span class="group-hover:hidden flex items-center gap-1">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                Saved
-                            </span>
-                            <span class="hidden group-hover:flex items-center gap-1">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                Remove
-                            </span>
+                            <span class="group-hover:hidden flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Saved</span>
+                            <span class="hidden group-hover:flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>Remove</span>
                         </button>
                     </td>
                 `;
@@ -576,23 +448,18 @@
             });
         }
 
-        // Event Listeners for standard dropdowns
-        filterVerdict.addEventListener('change', renderTable);
-        filterF500.addEventListener('change', renderTable);
-        resetBtn.addEventListener('click', () => {
-            filterVerdict.value = 'all';
-            filterF500.value = 'all';
+        document.getElementById('filter-verdict').addEventListener('change', renderTable);
+        document.getElementById('filter-f500').addEventListener('change', renderTable);
+        document.getElementById('reset-filters').addEventListener('click', () => {
+            document.getElementById('filter-verdict').value = 'all';
+            document.getElementById('filter-f500').value = 'all';
             chartFilters = { score: null, verdict: null, f500: null, posted: null };
             renderTable();
         });
 
-        // Initialize tables on load
-        renderTable();
-        renderAppliedJobs();
-
-        // ---------------------------------------------------------
-        // Chart Initialization & Interactions
-        // ---------------------------------------------------------
+        // =====================================================================
+        // CHART INITIALIZATION
+        // =====================================================================
         Chart.defaults.font.family = "'Inter', sans-serif";
         Chart.defaults.color = '#64748b';
 
@@ -601,157 +468,148 @@
                 event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
             }
         };
-        
-        // 1. Feasibility Score Histogram
-        const scoreBuckets = { '9-10': 0, '8-9': 0, '7-8': 0, '6-7': 0, '<6': 0 };
-        jobData.forEach(j => {
-            if (j.score >= 9) scoreBuckets['9-10']++;
-            else if (j.score >= 8) scoreBuckets['8-9']++;
-            else if (j.score >= 7) scoreBuckets['7-8']++;
-            else if (j.score >= 6) scoreBuckets['6-7']++;
-            else scoreBuckets['<6']++;
-        });
 
-        new Chart(document.getElementById('scoreChart'), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(scoreBuckets),
-                datasets: [{
-                    label: 'Jobs',
-                    data: Object.values(scoreBuckets),
-                    backgroundColor: ['#10b981', '#34d399', '#f59e0b', '#fbbf24', '#e11d48'],
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                maintainAspectRatio: false,
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: { 
-                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                    x: { grid: { display: false } }
+        function initCharts() {
+            Object.values(chartInstances).forEach(chart => chart.destroy());
+            chartInstances = {};
+
+            // 1. Score (Bar)
+            const scoreBuckets = { '9-10': 0, '8-9': 0, '7-8': 0, '6-7': 0, '<6': 0 };
+            jobData.forEach(j => {
+                if (j.score >= 9) scoreBuckets['9-10']++;
+                else if (j.score >= 8) scoreBuckets['8-9']++;
+                else if (j.score >= 7) scoreBuckets['7-8']++;
+                else if (j.score >= 6) scoreBuckets['6-7']++;
+                else scoreBuckets['<6']++;
+            });
+
+            chartInstances.score = new Chart(document.getElementById('scoreChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(scoreBuckets),
+                    datasets: [{
+                        label: 'Jobs', data: Object.values(scoreBuckets),
+                        backgroundColor: ['#10b981', '#34d399', '#f59e0b', '#fbbf24', '#e11d48'], borderRadius: 4
+                    }]
                 },
-                ...interactiveOptions,
-                onClick: (e, activeElements, chart) => {
-                    if (activeElements.length > 0) {
-                        const label = chart.data.labels[activeElements[0].index];
-                        chartFilters.score = (chartFilters.score === label) ? null : label;
-                        renderTable();
-                        document.getElementById('explorer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                options: {
+                    maintainAspectRatio: false, responsive: true, plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } },
+                    ...interactiveOptions,
+                    onClick: (e, activeElements, chart) => {
+                        if (activeElements.length > 0) {
+                            const label = chart.data.labels[activeElements[0].index];
+                            chartFilters.score = (chartFilters.score === label) ? null : label;
+                            renderTable(); document.getElementById('explorer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        // 2. Verdict Breakdown
-        let vCounts = { Yes: 0, Maybe: 0, No: 0 };
-        jobData.forEach(j => {
-            if (j.verdict.includes('YES')) vCounts.Yes++;
-            else if (j.verdict.includes('MAYBE')) vCounts.Maybe++;
-            else vCounts.No++;
-        });
+            // 2. Verdict (Doughnut)
+            let vCounts = { Yes: 0, Maybe: 0, No: 0 };
+            jobData.forEach(j => {
+                if (j.verdict.includes('YES')) vCounts.Yes++;
+                else if (j.verdict.includes('MAYBE')) vCounts.Maybe++;
+                else vCounts.No++;
+            });
 
-        new Chart(document.getElementById('verdictChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['High Fit (Yes)', 'Moderate (Maybe)', 'Low Fit (No)'],
-                datasets: [{
-                    data: [vCounts.Yes, vCounts.Maybe, vCounts.No],
-                    backgroundColor: ['#10b981', '#f59e0b', '#e11d48'],
-                    borderWidth: 2,
-                    borderColor: '#ffffff',
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                maintainAspectRatio: false,
-                responsive: true,
-                cutout: '65%',
-                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } },
-                ...interactiveOptions,
-                onClick: (e, activeElements, chart) => {
-                    if (activeElements.length > 0) {
-                        const label = chart.data.labels[activeElements[0].index];
-                        chartFilters.verdict = (chartFilters.verdict === label) ? null : label;
-                        renderTable();
-                        document.getElementById('explorer').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-            }
-        });
-
-        // 3. Fortune 500
-        let f500Counts = { Yes: 0, No: 0 };
-        jobData.forEach(j => {
-            if (j.f500) f500Counts.Yes++;
-            else f500Counts.No++;
-        });
-
-        new Chart(document.getElementById('fortuneChart'), {
-            type: 'pie',
-            data: {
-                labels: ['Fortune 500', 'Other Market'],
-                datasets: [{
-                    data: [f500Counts.Yes, f500Counts.No],
-                    backgroundColor: ['#1e293b', '#94a3b8'],
-                    borderWidth: 2,
-                    borderColor: '#ffffff',
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                maintainAspectRatio: false,
-                responsive: true,
-                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } },
-                ...interactiveOptions,
-                onClick: (e, activeElements, chart) => {
-                    if (activeElements.length > 0) {
-                        const label = chart.data.labels[activeElements[0].index];
-                        chartFilters.f500 = (chartFilters.f500 === label) ? null : label;
-                        renderTable();
-                        document.getElementById('explorer').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-            }
-        });
-
-        // 4. Posting Age
-        let ageCounts = { '≤ 3 Days': 0, '4-7 Days': 0, '> 7 Days': 0 };
-        jobData.forEach(j => {
-            ageCounts[getAgeBucket(j.posted)]++;
-        });
-
-        new Chart(document.getElementById('postedChart'), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(ageCounts),
-                datasets: [{
-                    label: 'Jobs by Recency',
-                    data: Object.values(ageCounts),
-                    backgroundColor: ['#3b82f6', '#8b5cf6', '#cbd5e1'],
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                indexAxis: 'y', // Make it a horizontal bar chart for variety
-                maintainAspectRatio: false,
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: { 
-                    x: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                    y: { grid: { display: false } }
+            chartInstances.verdict = new Chart(document.getElementById('verdictChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['High Fit (Yes)', 'Moderate (Maybe)', 'Low Fit (No)'],
+                    datasets: [{
+                        data: [vCounts.Yes, vCounts.Maybe, vCounts.No],
+                        backgroundColor: ['#10b981', '#f59e0b', '#e11d48'],
+                        borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4
+                    }]
                 },
-                ...interactiveOptions,
-                onClick: (e, activeElements, chart) => {
-                    if (activeElements.length > 0) {
-                        const label = chart.data.labels[activeElements[0].index];
-                        chartFilters.posted = (chartFilters.posted === label) ? null : label;
-                        renderTable();
-                        document.getElementById('explorer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                options: {
+                    maintainAspectRatio: false, responsive: true, cutout: '65%',
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } },
+                    ...interactiveOptions,
+                    onClick: (e, activeElements, chart) => {
+                        if (activeElements.length > 0) {
+                            const label = chart.data.labels[activeElements[0].index];
+                            chartFilters.verdict = (chartFilters.verdict === label) ? null : label;
+                            renderTable(); document.getElementById('explorer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
                     }
                 }
-            }
-        });
+            });
+
+            // 3. F500 (Pie)
+            let f500Counts = { Yes: 0, No: 0 };
+            jobData.forEach(j => { if (j.f500) f500Counts.Yes++; else f500Counts.No++; });
+
+            chartInstances.f500 = new Chart(document.getElementById('fortuneChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Fortune 500', 'Other Market'],
+                    datasets: [{
+                        data: [f500Counts.Yes, f500Counts.No],
+                        backgroundColor: ['#1e293b', '#94a3b8'],
+                        borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false, responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } },
+                    ...interactiveOptions,
+                    onClick: (e, activeElements, chart) => {
+                        if (activeElements.length > 0) {
+                            const label = chart.data.labels[activeElements[0].index];
+                            chartFilters.f500 = (chartFilters.f500 === label) ? null : label;
+                            renderTable(); document.getElementById('explorer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                }
+            });
+
+            // 4. Posted Recency (Pie)
+            let ageCounts = { '≤ 3 Days': 0, '4-7 Days': 0, '> 7 Days': 0 };
+            jobData.forEach(j => { ageCounts[getAgeBucket(j.posted)]++; });
+
+            chartInstances.posted = new Chart(document.getElementById('postedChart'), {
+                type: 'pie', // Changed from bar to pie
+                data: {
+                    labels: Object.keys(ageCounts),
+                    datasets: [{
+                        data: Object.values(ageCounts),
+                        backgroundColor: ['#3b82f6', '#8b5cf6', '#cbd5e1'],
+                        borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false, responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } },
+                    ...interactiveOptions,
+                    onClick: (e, activeElements, chart) => {
+                        if (activeElements.length > 0) {
+                            const label = chart.data.labels[activeElements[0].index];
+                            chartFilters.posted = (chartFilters.posted === label) ? null : label;
+                            renderTable(); document.getElementById('explorer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                }
+            });
+        }
+
+        // =====================================================================
+        // FALLBACK DATA (Used only if Git fetch fails)
+        // =====================================================================
+        function getFallbackData() {
+            return [
+                { title: "Principal Product Manager", company: "SAP", f500: true, score: 9.8, posted: "2 days ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
+                { title: "Senior Product Manager", company: "Chubb", f500: true, score: 9.7, posted: "1 week ago", link: "#", verdict: "🟢 YES – BASE CV CAN BE USED AS-IS" },
+                { title: "Data Product Manager, Analytics", company: "FedEx", f500: true, score: 7.3, posted: "11 days ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
+                { title: "Product Manager - Cybersecurity", company: "Pixalate", f500: false, score: 6.2, posted: "3 days ago", link: "#", verdict: "🟠 MAYBE – GENERAL FIT IMPROVEMENT" },
+                { title: "Demand Management PM", company: "Applied Materials", f500: true, score: 4.5, posted: "2 days ago", link: "#", verdict: "🟥 NO – SEVERE SPECIALIZED DOMAIN GAP" }
+            ];
+        }
+
+        // Trigger Load
+        window.addEventListener('DOMContentLoaded', loadJobData);
     </script>
 </body>
 </html>
